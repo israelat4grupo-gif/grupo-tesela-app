@@ -95,9 +95,24 @@ function setSession(s, ev) {
 }
 async function login() {
   if (state.session) { await sb.auth.signOut(); toast('Sesión cerrada'); return; }
-  const email = prompt('Correo para entrar (recibirás un enlace):', CFG.EDITOR_EMAIL); if (!email) return;
+  const email = prompt('Correo para entrar:', CFG.EDITOR_EMAIL); if (!email) return;
+  const password = prompt('Contraseña (déjala vacía para recibir un enlace por correo):', '');
+  if (password === null) return;
+  if (password) {
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    toast(error ? 'No se pudo entrar: ' + error.message : 'Sesión iniciada', 6000); return;
+  }
   const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
-  toast(error ? 'Error: ' + error.message : 'Revisa tu correo y abre el enlace para entrar', 6000);
+  if (error && /rate limit/i.test(error.message)) toast('Supabase solo envía 2 correos por hora. Espera una hora o entra con contraseña.', 9000);
+  else toast(error ? 'Error: ' + error.message : 'Revisa tu correo y abre el enlace en este mismo navegador', 6000);
+}
+async function setPassword() {
+  if (!state.session) { toast('Primero entra con el enlace del correo'); return; }
+  const p1 = prompt('Nueva contraseña (mínimo 8 caracteres). Con ella entrarás sin depender del correo:'); if (!p1) return;
+  if (p1.length < 8) { toast('Mínimo 8 caracteres'); return; }
+  const p2 = prompt('Repite la contraseña:'); if (p2 !== p1) { toast('No coinciden'); return; }
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  toast(error ? 'No se pudo guardar: ' + error.message : 'Contraseña guardada. La próxima vez pulsa Entrar y escríbela.', 7000);
 }
 function updateStatus() {
   const net = $('#net'); net.textContent = navigator.onLine ? 'En línea' : 'Sin conexión'; net.className = 'chip ' + (navigator.onLine ? 'on' : 'off');
@@ -403,7 +418,7 @@ function bind() {
   window.addEventListener('hashchange', () => { const t = location.hash.slice(1); if (TABS.includes(t)) { state.tab = t; renderAll(); } });
   window.addEventListener('online', () => { updateStatus(); flushQueue(); reload(true); }); window.addEventListener('offline', updateStatus);
   window.addEventListener('resize', () => { if (state.tab === 'organigrama') renderOrg(); if (state.tab === 'cartera') renderCurva(); });
-  $('#btn-login').onclick = login; $('#btn-share').onclick = share; $('#panel-close').onclick = closePanel;
+  $('#btn-login').onclick = login; $('#btn-pass').onclick = setPassword; $('#btn-share').onclick = share; $('#panel-close').onclick = closePanel;
   $('#org-activos').onchange = renderOrg; $('#org-fit').onclick = renderOrg;
   ['#act-q', '#act-emp', '#act-ev'].forEach((s) => $(s).addEventListener('input', renderActivos)); $('#cf-prev').onchange = renderCashflow;
   $('#act-new').onclick = newActivo; $('#pend-new').onclick = newPend; $('#doc-new').onclick = newDoc; $('#dec-new').onclick = newDec; $('#btn-export').onclick = exportJson; $('#btn-reload').onclick = () => reload(false);
