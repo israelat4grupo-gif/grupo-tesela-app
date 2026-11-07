@@ -4,5 +4,5 @@ window.GT_CONFIG = {
   SUPABASE_ANON_KEY: 'sb_publishable_VQ3fUyuD-OkdsnlfrQWAzQ_OkIbmZ38',
   EDITOR_EMAIL: 'israel@grupotesela.com',
   APP_NAME: 'Grupo Tesela',
-  VERSION: '2026-11-07.1'
+  VERSION: '2026-11-07.2'
 };

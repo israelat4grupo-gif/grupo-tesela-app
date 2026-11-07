@@ -6,6 +6,7 @@ const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY)
 const TABLES = ['empresas', 'socios', 'activos', 'movimientos', 'documentos', 'pendientes', 'decisiones', 'parametros'];
 const DB = { empresas: [], socios: [], activos: [], movimientos: [], documentos: [], pendientes: [], decisiones: [], parametros: [] };
 const state = { session: null, editor: false, tab: 'organigrama', sel: null, selType: null, queue: [], lastSync: null, sortCol: {}, installPrompt: null };
+const TABS = ['organigrama', 'activos', 'modelo', 'cartera', 'cashflow', 'documentos', 'decisiones'];
 const $ = (s, r = document) => r.querySelector(s); const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 // ---------- formato ----------
@@ -81,9 +82,17 @@ async function insertRow(table, data) {
 // ---------- sesión ----------
 async function initAuth() {
   const { data } = await sb.auth.getSession(); setSession(data.session);
-  sb.auth.onAuthStateChange((_e, s) => { setSession(s); flushQueue(); });
+  sb.auth.onAuthStateChange((ev, s) => { setSession(s, ev); flushQueue(); });
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get('error_description')) toast('No se pudo entrar: ' + h.get('error_description').replace(/\+/g, ' '), 8000);
 }
-function setSession(s) { state.session = s; state.editor = !!(s && s.user && s.user.email && s.user.email.toLowerCase() === CFG.EDITOR_EMAIL); updateStatus(); renderAll(); }
+function setSession(s, ev) {
+  const was = state.editor;
+  state.session = s; state.editor = !!(s && s.user && s.user.email && s.user.email.toLowerCase() === CFG.EDITOR_EMAIL);
+  if (state.editor && !was && ev === 'SIGNED_IN') toast('Has entrado como Israel: modo edición activo. Toca una caja o una fila para editarla.', 7000);
+  else if (s && !state.editor && ev === 'SIGNED_IN') toast('Has entrado con ' + s.user.email + ', pero solo ' + CFG.EDITOR_EMAIL + ' puede editar.', 7000);
+  updateStatus(); renderAll();
+}
 async function login() {
   if (state.session) { await sb.auth.signOut(); toast('Sesión cerrada'); return; }
   const email = prompt('Correo para entrar (recibirás un enlace):', CFG.EDITOR_EMAIL); if (!email) return;
@@ -94,6 +103,7 @@ function updateStatus() {
   const net = $('#net'); net.textContent = navigator.onLine ? 'En línea' : 'Sin conexión'; net.className = 'chip ' + (navigator.onLine ? 'on' : 'off');
   $('#sync').textContent = state.lastSync ? 'Sinc. ' + new Date(state.lastSync).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'Sin datos';
   $('#btn-login').textContent = state.session ? (state.editor ? 'Israel · salir' : 'Salir') : 'Entrar';
+  $('#chip-editor').hidden = !state.editor;
   $$('[data-editor]').forEach((b) => { b.hidden = !state.editor; });
   $('#queue-info').textContent = state.queue.length ? state.queue.length + ' cambio(s) pendientes de enviar' : '';
 }
@@ -390,7 +400,7 @@ function share() { const url = location.origin + location.pathname; const text =
 
 // ---------- arranque ----------
 function bind() {
-  window.addEventListener('hashchange', () => { const t = location.hash.slice(1); if (['organigrama', 'activos', 'modelo', 'cartera', 'cashflow', 'documentos', 'decisiones'].includes(t)) { state.tab = t; renderAll(); } });
+  window.addEventListener('hashchange', () => { const t = location.hash.slice(1); if (TABS.includes(t)) { state.tab = t; renderAll(); } });
   window.addEventListener('online', () => { updateStatus(); flushQueue(); reload(true); }); window.addEventListener('offline', updateStatus);
   window.addEventListener('resize', () => { if (state.tab === 'organigrama') renderOrg(); if (state.tab === 'cartera') renderCurva(); });
   $('#btn-login').onclick = login; $('#btn-share').onclick = share; $('#panel-close').onclick = closePanel;
@@ -402,7 +412,10 @@ function bind() {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 (async function main() {
-  bind(); loadQueue(); const t = location.hash.slice(1); if (t) state.tab = t; else location.hash = '#organigrama';
-  loadCache(); renderAll(); await initAuth(); await reload(true); flushQueue();
+  bind(); loadQueue();
+  const t = location.hash.slice(1); state.tab = TABS.includes(t) ? t : 'organigrama'; // el hash puede traer el token del enlace mágico: no se toca hasta que Supabase lo lea
+  loadCache(); renderAll(); await initAuth();
+  if (!TABS.includes(location.hash.slice(1))) history.replaceState(null, '', location.pathname + '#' + state.tab);
+  await reload(true); flushQueue();
 })();
 })();
