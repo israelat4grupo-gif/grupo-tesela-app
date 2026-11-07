@@ -42,6 +42,7 @@ td.pos{color:var(--ok)}td.neg{color:var(--bad)}tr.total td{font-weight:600;backg
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
 .sect{margin-top:16px;padding-top:10px;border-top:1px solid var(--line)}.sect h4{margin:0 0 6px;font-size:13px;color:var(--navy)}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12.5px}.kv dt{color:var(--muted)}.kv dd{margin:0;font-variant-numeric:tabular-nums}
+.dlg{border:1px solid var(--line);border-radius:12px;padding:16px 18px;width:min(420px,92vw);color:var(--fg);box-shadow:0 12px 40px rgba(0,0,0,.25)}.dlg::backdrop{background:rgba(23,32,42,.45)}.dlg .form{grid-template-columns:1fr}.dlg h3{color:var(--navy)}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#17202a;color:#fff;padding:9px 14px;border-radius:9px;font-size:13px;z-index:40;max-width:90vw}
 .list{list-style:none;padding:0;margin:0}.list li{padding:6px 0;border-bottom:1px solid var(--line);font-size:12.5px;display:flex;gap:8px;align-items:flex-start}.list li .d{color:var(--muted);white-space:nowrap}
 @media (max-width:720px){.top{gap:8px}.tabs a{padding:5px 8px;font-size:12px}main{padding:8px}.form{grid-template-columns:1fr}.org{height:70vh}}

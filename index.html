@@ -32,6 +32,27 @@
     <span id="chip-editor" class="chip on" title="Sesión de Israel: puedes editar" hidden>Modo edición</span>
     <button id="btn-login" class="btn small">Entrar</button>
     <button id="btn-pass" class="btn small ghost" title="Crear o cambiar la contraseña de acceso" data-editor hidden>Contraseña</button>
+    <dialog id="dlg-login" class="dlg">
+      <form method="dialog" class="form" id="f-login">
+        <h3 class="wide">Entrar</h3>
+        <label class="wide">Correo<input name="email" type="email" autocomplete="username" required></label>
+        <label class="wide">Contraseña <span class="hint">(si aún no tienes, pide el enlace)</span><input name="password" type="password" autocomplete="current-password"></label>
+        <div class="row wide">
+          <button class="btn" value="password">Entrar con contraseña</button>
+          <button class="btn ghost" value="otp">Enviarme el enlace por correo</button>
+          <button class="btn ghost" value="cancel">Cancelar</button>
+        </div>
+        <p class="hint wide">El enlace del correo hay que abrirlo en este mismo navegador. Supabase solo envía 2 correos por hora.</p>
+      </form>
+    </dialog>
+    <dialog id="dlg-pass" class="dlg">
+      <form method="dialog" class="form" id="f-pass">
+        <h3 class="wide">Contraseña de acceso</h3>
+        <label class="wide">Nueva contraseña (mínimo 8 caracteres)<input name="p1" type="password" autocomplete="new-password" minlength="8" required></label>
+        <label class="wide">Repetir<input name="p2" type="password" autocomplete="new-password" minlength="8" required></label>
+        <div class="row wide"><button class="btn" value="ok">Guardar</button><button class="btn ghost" value="cancel">Cancelar</button></div>
+      </form>
+    </dialog>
     <button id="btn-share" class="btn small ghost" title="Compartir enlace por WhatsApp">WhatsApp</button>
     <button id="btn-install" class="btn small ghost" hidden>Instalar</button>
   </div>

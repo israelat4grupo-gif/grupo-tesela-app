@@ -95,24 +95,33 @@ function setSession(s, ev) {
 }
 async function login() {
   if (state.session) { await sb.auth.signOut(); toast('Sesión cerrada'); return; }
-  const email = prompt('Correo para entrar:', CFG.EDITOR_EMAIL); if (!email) return;
-  const password = prompt('Contraseña (déjala vacía para recibir un enlace por correo):', '');
-  if (password === null) return;
-  if (password) {
-    const { error } = await sb.auth.signInWithPassword({ email, password });
-    toast(error ? 'No se pudo entrar: ' + error.message : 'Sesión iniciada', 6000); return;
-  }
-  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
-  if (error && /rate limit/i.test(error.message)) toast('Supabase solo envía 2 correos por hora. Espera una hora o entra con contraseña.', 9000);
-  else toast(error ? 'Error: ' + error.message : 'Revisa tu correo y abre el enlace en este mismo navegador', 6000);
+  const dlg = $('#dlg-login'), f = $('#f-login'); f.email.value = f.email.value || CFG.EDITOR_EMAIL; f.password.value = '';
+  dlg.showModal();
+  dlg.onclose = async () => {
+    const how = dlg.returnValue; const email = f.email.value.trim(), password = f.password.value;
+    if (how === 'password') {
+      if (!password) { toast('Escribe la contraseña o pide el enlace por correo'); return; }
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      toast(error ? 'No se pudo entrar: ' + error.message : 'Sesión iniciada', 6000);
+    } else if (how === 'otp') {
+      const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
+      if (error && /rate limit/i.test(error.message)) toast('Supabase solo envía 2 correos por hora. Espera o entra con contraseña.', 9000);
+      else toast(error ? 'Error: ' + error.message : 'Revisa tu correo y abre el enlace en este mismo navegador', 6000);
+    }
+    f.password.value = '';
+  };
 }
-async function setPassword() {
+function setPassword() {
   if (!state.session) { toast('Primero entra con el enlace del correo'); return; }
-  const p1 = prompt('Nueva contraseña (mínimo 8 caracteres). Con ella entrarás sin depender del correo:'); if (!p1) return;
-  if (p1.length < 8) { toast('Mínimo 8 caracteres'); return; }
-  const p2 = prompt('Repite la contraseña:'); if (p2 !== p1) { toast('No coinciden'); return; }
-  const { error } = await sb.auth.updateUser({ password: p1 });
-  toast(error ? 'No se pudo guardar: ' + error.message : 'Contraseña guardada. La próxima vez pulsa Entrar y escríbela.', 7000);
+  const dlg = $('#dlg-pass'), f = $('#f-pass'); f.reset(); dlg.showModal();
+  dlg.onclose = async () => {
+    if (dlg.returnValue !== 'ok') return;
+    const p1 = f.p1.value, p2 = f.p2.value; f.reset();
+    if (p1.length < 8) { toast('Mínimo 8 caracteres'); return; }
+    if (p1 !== p2) { toast('Las contraseñas no coinciden'); return; }
+    const { error } = await sb.auth.updateUser({ password: p1 });
+    toast(error ? 'No se pudo guardar: ' + error.message : 'Contraseña guardada. La próxima vez pulsa Entrar y escríbela.', 7000);
+  };
 }
 function updateStatus() {
   const net = $('#net'); net.textContent = navigator.onLine ? 'En línea' : 'Sin conexión'; net.className = 'chip ' + (navigator.onLine ? 'on' : 'off');
