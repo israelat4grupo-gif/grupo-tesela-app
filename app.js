@@ -14,7 +14,7 @@ const fmtEur2 = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'E
 const fmtPct = new Intl.NumberFormat('es-ES', { style: 'percent', maximumFractionDigits: 1 });
 const fmtInt = new Intl.NumberFormat('es-ES');
 const num = (v) => (v == null || v === '' || isNaN(Number(v))) ? null : Number(v);
-const eur = (v, d2) => { const n = num(v); return n == null ? '—' : (d2 ? fmtEur2 : fmtEur).format(n); };
+const eur = (v, d2) => { const n = num(v); return n == null ? '—' : (d2 === true ? fmtEur2 : fmtEur).format(n); };
 const pct = (v) => { const n = num(v); return n == null || !isFinite(n) ? '—' : fmtPct.format(n); };
 const txt = (v) => (v == null || v === '') ? '—' : String(v);
 const fdate = (v) => { if (!v) return '—'; const d = new Date(String(v).slice(0, 10) + 'T00:00:00'); return isNaN(d) ? String(v) : d.toLocaleDateString('es-ES'); };
