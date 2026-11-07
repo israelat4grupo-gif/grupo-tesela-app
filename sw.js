@@ -1,5 +1,6 @@
-const CACHE = 'grupo-tesela-v4';
-const SHELL = ['./', './index.html', './styles.css', './app.js', './config.js', './manifest.json', './vendor/d3.v7.min.js', './vendor/supabase.min.js', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'];
+// Al publicar: subir CACHE y el ?v= de index.html y de esta lista a la vez.
+const CACHE = 'grupo-tesela-v5';
+const SHELL = ['./', './index.html', './styles.css?v=5', './app.js?v=5', './config.js?v=5', './manifest.json', './vendor/d3.v7.min.js', './vendor/supabase.min.js', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });
