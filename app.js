@@ -9,7 +9,7 @@ const state = { session: null, editor: false, tab: 'organigrama', sel: null, sel
 const $ = (s, r = document) => r.querySelector(s); const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
 // ---------- formato ----------
-const fmtEur = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+const fmtEur = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const fmtEur2 = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtPct = new Intl.NumberFormat('es-ES', { style: 'percent', maximumFractionDigits: 1 });
 const fmtInt = new Intl.NumberFormat('es-ES');
@@ -120,11 +120,18 @@ function xirr(flows) { // flows: [{fecha, importe}]
 function modelo(a) {
   const inv = num(a.inversion_total), fin = num(a.financiacion) || 0, eq = inv != null ? inv - fin : null;
   const ing = num(a.ingreso_anual_modelo), yv = num(a.yield_venta);
-  const valor = ing != null && yv ? ing / yv : (a.base_venta === 'total' || inv != null ? num(a.venta_potencial) : null);
-  const resultado = valor != null && inv != null ? valor - inv : null;
-  const roeInv = resultado != null && inv ? resultado / inv : null, roeEq = resultado != null && eq ? resultado / eq : null;
   const capital = num(a.capital_grupo_modelo) ?? num(a.inversion_grupo);
-  const beneficio = roeEq != null && capital != null ? roeEq * capital : null;
+  // Ámbito del cálculo: «total» (toda la operación, como en la hoja INVERSIONES) o «grupo» (solo la parte del grupo)
+  let valor = null, resultado = null, roeInv = null, roeEq = null, beneficio = null, ambito = null;
+  if (ing != null && yv) { ambito = 'total'; valor = ing / yv; }
+  else if (a.base_venta === 'total' && num(a.venta_potencial) != null) { ambito = 'total'; valor = num(a.venta_potencial); }
+  else if (a.base_venta === 'grupo' && num(a.venta_potencial) != null) { ambito = 'grupo'; }
+  if (ambito === 'total' && valor != null && inv != null) {
+    resultado = valor - inv; roeInv = inv ? resultado / inv : null; roeEq = eq ? resultado / eq : null;
+    beneficio = roeEq != null && capital != null ? roeEq * capital : null;
+  } else if (ambito === 'grupo' && capital) {
+    beneficio = num(a.venta_potencial) - capital; resultado = beneficio; roeInv = roeEq = beneficio / capital;
+  }
   const d = a.fecha && a.salida_prevista ? days(a.fecha, a.salida_prevista) : null, anios = d != null ? d / 365 : null;
   const tirSimple = roeEq != null && anios ? roeEq / anios : null;
   const roiAnual = roeEq != null && anios ? Math.pow(1 + roeEq, 1 / anios) - 1 : null;
@@ -136,7 +143,7 @@ function modelo(a) {
   const prevFlows = (!cerrada && a.salida_prevista && (a.base_venta === 'grupo' ? num(a.venta_potencial) : (capital != null && beneficio != null ? capital + beneficio : null)) != null)
     ? flows.concat([{ fecha: a.salida_prevista, importe: a.base_venta === 'grupo' ? num(a.venta_potencial) : capital + beneficio }]) : null;
   const tirPrev = prevFlows ? xirr(prevFlows) : null;
-  return { inv, fin, eq, ing, yv, valor, resultado, roeInv, roeEq, palanca: roeEq != null && roeInv ? roeEq / roeInv : null, capital, beneficio, dias: d, anios, tirSimple, roiAnual, rentasAnio, real, tirReal, tirPrev, cerrada, yieldCost: ing != null && inv ? ing / inv : null };
+  return { inv, fin, eq, ing, yv, valor, resultado, roeInv, roeEq, palanca: roeEq != null && roeInv ? roeEq / roeInv : null, capital, beneficio, dias: d, anios, tirSimple, roiAnual, rentasAnio, real, tirReal, tirPrev, cerrada, ambito, yieldCost: ing != null && inv ? ing / inv : null };
 }
 function kpis() {
   const A = DB.activos.filter((a) => a.visible !== false);
@@ -228,7 +235,7 @@ function renderModelo() {
     { h: 'Entrada', v: (r) => r.a.fecha, f: fdate }, { h: 'Salida prev.', v: (r) => r.a.salida_prevista, f: fdate },
     { h: 'Inversión total', n: 1, v: (r) => r.m.inv, f: eur }, { h: 'Financiación', n: 1, v: (r) => r.m.fin, f: eur }, { h: 'Equity', n: 1, v: (r) => r.m.eq, f: eur },
     { h: 'Ingreso anual', n: 1, v: (r) => r.m.ing, f: eur }, { h: 'Yield to cost', n: 1, v: (r) => r.m.yieldCost, f: pct }, { h: 'Yield venta', n: 1, v: (r) => r.m.yv, f: pct },
-    { h: 'Valor', n: 1, v: (r) => r.m.valor, f: eur }, { h: 'Resultado', n: 1, v: (r) => r.m.resultado, f: eur, cls: (v) => num(v) > 0 ? 'pos' : num(v) < 0 ? 'neg' : '' },
+    { h: 'Valor', n: 1, v: (r) => r.m.valor, f: eur }, { h: 'Resultado', n: 1, v: (r) => r.m.resultado, f: (v, r) => eur(v) + (r.m.ambito ? `<span class="sub">${r.m.ambito === 'grupo' ? 'solo grupo' : 'toda la operación'}</span>` : ''), cls: (v) => num(v) > 0 ? 'pos' : num(v) < 0 ? 'neg' : '' },
     { h: 'ROE inv.', n: 1, v: (r) => r.m.roeInv, f: pct }, { h: 'ROE equity', n: 1, v: (r) => r.m.roeEq, f: pct }, { h: 'Palanca', n: 1, v: (r) => r.m.palanca, f: (v) => v == null ? '—' : v.toFixed(2) + '×' },
     { h: 'Capital grupo', n: 1, v: (r) => r.m.capital, f: eur }, { h: 'Beneficio grupo', n: 1, v: (r) => r.m.beneficio, f: eur, cls: (v) => num(v) > 0 ? 'pos' : '' },
     { h: 'Años', n: 1, v: (r) => r.m.anios, f: (v) => v == null ? '—' : v.toFixed(2) }, { h: 'TIR simple', n: 1, v: (r) => r.m.tirSimple, f: pct }, { h: 'ROI anualizado', n: 1, v: (r) => r.m.roiAnual, f: pct },
