@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grupo Tesela · Organigrama e inversiones</title>
+<meta name="description" content="Organigrama de sociedades y activos del Grupo Tesela, con modelo de rentabilidad, cartera y flujo de caja.">
+<meta name="theme-color" content="#1f3b57">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <img src="icons/icon.svg" alt="" width="28" height="28">
+    <div><h1>Grupo Tesela</h1><div class="sub">Organigrama e inversiones</div></div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <a href="#organigrama" data-tab="organigrama">Organigrama</a>
+    <a href="#activos" data-tab="activos">Activos</a>
+    <a href="#modelo" data-tab="modelo">Modelo</a>
+    <a href="#cartera" data-tab="cartera">Cartera</a>
+    <a href="#cashflow" data-tab="cashflow">Flujo de caja</a>
+    <a href="#documentos" data-tab="documentos">Documentos</a>
+    <a href="#decisiones" data-tab="decisiones">Decisiones</a>
+  </nav>
+  <div class="status">
+    <span id="net" class="chip">—</span>
+    <span id="sync" class="chip" title="Última sincronización">—</span>
+    <button id="btn-login" class="btn small">Entrar</button>
+    <button id="btn-share" class="btn small ghost" title="Compartir enlace por WhatsApp">WhatsApp</button>
+    <button id="btn-install" class="btn small ghost" hidden>Instalar</button>
+  </div>
+</header>
+
+<main id="main">
+  <section id="kpis" class="kpis"></section>
+
+  <section data-page="organigrama" class="page">
+    <div class="card">
+      <div class="card-head">
+        <h2>Estructura societaria</h2>
+        <div class="tools">
+          <label class="check"><input type="checkbox" id="org-activos" checked> Mostrar activos</label>
+          <button class="btn small ghost" id="org-fit">Ajustar</button>
+          <span class="hint" id="org-hint">Toca una caja para ver su ficha.</span>
+        </div>
+      </div>
+      <div id="org" class="org"></div>
+      <div class="legend">
+        <span><i class="sw c100"></i>Control 100 %</span><span><i class="sw c50"></i>50 %</span><span><i class="sw c33"></i>10–33 %</span><span><i class="sw cna"></i>Por confirmar</span>
+        <span><i class="sw ev-acreditado"></i>Acreditado</span><span><i class="sw ev-parcial"></i>Parcial</span><span><i class="sw ev-contradiccion"></i>Contradicción</span><span><i class="sw ev-sindatos"></i>Sin datos</span>
+      </div>
+    </div>
+  </section>
+
+  <section data-page="activos" class="page" hidden>
+    <div class="card">
+      <div class="card-head">
+        <h2>Activos y operaciones</h2>
+        <div class="tools">
+          <input id="act-q" type="search" placeholder="Buscar…" class="input">
+          <select id="act-emp" class="input"><option value="">Todas las sociedades</option></select>
+          <select id="act-ev" class="input"><option value="">Toda evidencia</option><option>Acreditado</option><option>Parcial</option><option>Contradicción</option><option>Sin datos</option></select>
+          <button class="btn small" id="act-new" data-editor hidden>+ Activo</button>
+        </div>
+      </div>
+      <div class="tablebox"><table id="tbl-activos"></table></div>
+    </div>
+  </section>
+
+  <section data-page="modelo" class="page" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Modelo de rentabilidad por activo</h2>
+        <p class="note">Columnas del modelo de las hojas INVERSIONES ISRAEL (previsión) junto a lo real acreditado por movimientos. TIR real calculada con flujos fechados (XIRR); TIR simple = ROE equity / años, como en la hoja.</p></div>
+      <div class="tablebox"><table id="tbl-modelo"></table></div>
+    </div>
+  </section>
+
+  <section data-page="cartera" class="page" hidden>
+    <div class="grid2">
+      <div class="card"><div class="card-head"><h2>Por categoría</h2></div><div class="tablebox"><table id="tbl-cat"></table></div></div>
+      <div class="card"><div class="card-head"><h2>Análisis de riesgo</h2><p class="note">Umbrales de Cartera_Inversiones_Tesela.</p></div><div class="tablebox"><table id="tbl-riesgo"></table></div></div>
+      <div class="card"><div class="card-head"><h2>Calendario de liquidez</h2><p class="note">Salida prevista, capital a recuperar y beneficio del grupo según el modelo.</p></div><div class="tablebox"><table id="tbl-cal"></table></div></div>
+      <div class="card"><div class="card-head"><h2>Curva de capital</h2><p class="note">Invertido y recuperado acumulados por trimestre, desde los movimientos reales.</p></div><div id="curva" class="chart"></div></div>
+    </div>
+  </section>
+
+  <section data-page="cashflow" class="page" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Flujo de caja mensual</h2>
+        <div class="tools"><label class="check"><input type="checkbox" id="cf-prev"> Incluir previsión de salidas</label></div>
+        <p class="note">Entradas y salidas del grupo por activo y mes, desde los movimientos fechados. Negativo = sale dinero; positivo = entra.</p></div>
+      <div class="tablebox"><table id="tbl-cf"></table></div>
+    </div>
+  </section>
+
+  <section data-page="documentos" class="page" hidden>
+    <div class="grid2">
+      <div class="card"><div class="card-head"><h2>Pendientes de documentar</h2><div class="tools"><button class="btn small" id="pend-new" data-editor hidden>+ Pendiente</button></div></div><div class="tablebox"><table id="tbl-pend"></table></div></div>
+      <div class="card"><div class="card-head"><h2>Documentos localizados</h2><div class="tools"><button class="btn small" id="doc-new" data-editor hidden>+ Documento</button></div></div><div class="tablebox"><table id="tbl-docs"></table></div></div>
+    </div>
+  </section>
+
+  <section data-page="decisiones" class="page" hidden>
+    <div class="card"><div class="card-head"><h2>Decisiones tomadas</h2><div class="tools"><button class="btn small" id="dec-new" data-editor hidden>+ Decisión</button></div></div><div class="tablebox"><table id="tbl-dec"></table></div></div>
+    <div class="card"><div class="card-head"><h2>Datos y copias</h2></div>
+      <div class="row">
+        <button class="btn" id="btn-export">Descargar copia JSON</button>
+        <button class="btn ghost" id="btn-reload">Volver a cargar de Supabase</button>
+        <span class="hint" id="queue-info"></span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<aside id="panel" class="panel" hidden>
+  <div class="panel-head"><h3 id="panel-title">Ficha</h3><button class="btn small ghost" id="panel-close">Cerrar</button></div>
+  <div id="panel-body" class="panel-body"></div>
+</aside>
+<div id="toast" class="toast" hidden></div>
+
+<script src="vendor/d3.v7.min.js"></script>
+<script src="vendor/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
